@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Endless Domains — Backend Login SDK Implementation Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #090B10;
+    --surface: #121622;
+    --surface-elevated: #181E2E;
+    --surface-hover: #1F273B;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-bright: rgba(255, 255, 255, 0.22);
+    --text: #F1F4FA;
+    --text-muted: #8E9AB0;
+    --accent: #4F6BFF;
+    --accent-soft: rgba(79, 107, 255, 0.14);
+    --cyan: #22D3EE;
+    --cyan-soft: rgba(34, 211, 238, 0.14);
+    --green: #10B981;
+    --green-soft: rgba(16, 185, 129, 0.14);
+    --amber: #F59E0B;
+    --amber-soft: rgba(245, 158, 11, 0.14);
+    --purple: #A855F7;
+    --purple-soft: rgba(168, 85, 247, 0.14);
+    --rose: #F43F5E;
+    --rose-soft: rgba(244, 63, 94, 0.14);
+    --font-ui: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  [data-theme="light"] {
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --surface-elevated: #F1F5F9;
+    --surface-hover: #E2E8F0;
+    --border: rgba(0, 0, 0, 0.09);
+    --border-bright: rgba(0, 0, 0, 0.2);
+    --text: #0F172A;
+    --text-muted: #64748B;
+    --accent: #2563EB;
+    --accent-soft: rgba(37, 99, 235, 0.1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    line-height: 1.6;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .layout-wrap {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 40px 24px 100px;
+  }
+  header.hero {
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #2639ED, #22D3EE);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: clamp(26px, 4vw, 38px);
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+  p.lead {
+    font-size: 16.5px;
+    color: var(--text-muted);
+    max-width: 860px;
+  }
+  section { margin-bottom: 44px; }
+  h2 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+  h3 { font-size: 17px; font-weight: 700; margin: 20px 0 10px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .table-wrap {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 20px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  th { background: var(--surface-elevated); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 5px;
+    color: var(--cyan);
+  }
+  pre {
+    background: #0B0D14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.5;
+    color: #E2E8F0;
+    overflow-x: auto;
+    margin: 10px 0 16px;
+  }
+  .callout {
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--cyan);
+    background: var(--cyan-soft);
+  }
+  .phase-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .phase-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .theme-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<div class="layout-wrap">
+  <header class="hero">
+    <div class="badge">Backend Engineering Plan</div>
+    <h1>Endless Domains Login SDK: NestJS Backend Implementation Roadmap</h1>
+    <p class="lead">
+      Grounded specifically in the <code>endless-domain-api</code> repository (NestJS 10, TypeORM, PostgreSQL, Alchemy SDK, AWS Secrets Manager). This document outlines the exact modules, entities, services, DTOs, and controllers to build.
+    </p>
+  </header>
+
+  <!-- Section 1: Codebase Reuse -->
+  <section>
+    <h2>1. Reusing Existing Backend Infrastructure</h2>
+    <p>We do not reinvent the wheel. Our backend already possesses the core building blocks needed for this SDK:</p>
+    
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Need</th>
+            <th>Existing Repository File / Module</th>
+            <th>How We Reuse It</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Nonce & Wallet Verification</b></td>
+            <td><code>src/components/web3-auth/web3-auth.service.ts</code></td>
+            <td>Reuse the nonce generator and ECDSA signature recovery math (<code>ethers.verifyMessage</code>). We bind it to EIP-4361 standard SIWE format.</td>
+          </tr>
+          <tr>
+            <td><b>Polygon On-Chain Reads</b></td>
+            <td><code>src/components/alchmey/ud-alchmey/ud-alchmey.serveice.ts</code></td>
+            <td>Reuse <code>UdAlchmeyService</code>, configured with <code>Network.MATIC_MAINNET</code> and <code>ALCHMEY_KEY</code> from <code>ConfigService</code>, for sub-second contract reads.</td>
+          </tr>
+          <tr>
+            <td><b>Domain Candidate Lookup</b></td>
+            <td><code>src/components/domain/domain-detail/domain-detail-bc.repo.ts</code></td>
+            <td>Query candidate domains from <code>tbl_domain_detail_bc</code> (indexed by wallet address) before running live on-chain checks.</td>
+          </tr>
+          <tr>
+            <td><b>Logging & Monitoring</b></td>
+            <td><code>src/logger/file-logge.ts</code> (<code>CustomLoggerService</code>)</td>
+            <td>Inject <code>CustomLoggerService</code> for CloudWatch error and audit logging.</td>
+          </tr>
+          <tr>
+            <td><b>Database & Entity Pattern</b></td>
+            <td><code>src/@core/common/entity/base.entity.ts</code></td>
+            <td>Extend <code>BaseEntity</code> (providing <code>id</code>, <code>createdDateTime</code>, <code>isDeleted</code>, <code>lastChangedDateTime</code>).</td>
+          </tr>
+          <tr>
+            <td><b>Controller Response Envelope</b></td>
+            <td><code>src/@core/common/dto/response.dto.ts</code></td>
+            <td>Wrap all responses in standard <code>new Response(MessageEnum, result)</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Section 2: Directory Layout -->
+  <section>
+    <h2>2. New Module Structure: src/components/login-provider/</h2>
+    <p>Following NestJS and CLAUDE.md conventions, all code lives in a clean, self-contained module:</p>
+
+    <pre><code>src/components/login-provider/
+├── dto/
+│   ├── authorize-query.dto.ts          # Validates client_id, redirect_uri, code_challenge, state
+│   ├── token-request.dto.ts            # Validates code, code_verifier, grant_type
+│   ├── login-nonce-response.dto.ts     # Returns nonce, requestId, expiresAt
+│   ├── login-verify.dto.ts             # Body: message, signature (EIP-4361)
+│   ├── login-consent.dto.ts            # Body: chosenDomain, scopes
+│   └── create-client.dto.ts            # Admin: name, logo, redirectUris, allowedOrigins
+├── entity/
+│   ├── login-client.entity.ts          # tbl_login_clients (registered games)
+│   ├── login-transaction.entity.ts     # tbl_login_transactions (10m TTL)
+│   ├── login-code.entity.ts            # tbl_login_codes (60s single-use)
+│   ├── login-refresh-token.entity.ts   # tbl_login_refresh_tokens (rotating)
+│   ├── login-consent.entity.ts         # tbl_login_consents (user choices)
+│   └── login-signing-key.entity.ts     # tbl_login_signing_keys (JWKS public keys)
+├── enum/
+│   ├── login-provider-success-message.enum.ts
+│   ├── login-provider-error-message.enum.ts
+│   └── domain-status.enum.ts           # 'owned' | 'lost' | 'none'
+├── interface/
+│   ├── login-provider.service.interface.ts
+│   ├── oidc-token.service.interface.ts
+│   └── domain-ownership-verifier.interface.ts
+├── repositories/
+│   ├── login-client.repo.ts
+│   ├── login-transaction.repo.ts
+│   ├── login-code.repo.ts
+│   └── login-refresh-token.repo.ts
+├── login-provider.controller.ts        # GET /authorize, POST /token, GET /userinfo, /.well-known/*
+├── login-provider.service.ts           # Core OIDC orchestration & consent
+├── oidc-token.service.ts               # ES256 signing, JWKS, refresh rotation
+├── domain-ownership.service.ts         # Polygon contract reader & reverse resolution
+└── login-provider.module.ts            # NestJS Module definition</code></pre>
+  </section>
+
+  <!-- Section 3: Phase by Phase Plan -->
+  <section>
+    <h2>3. Step-by-Step Implementation Roadmap</h2>
+
+    <!-- Phase 1 -->
+    <div class="card">
+      <div class="phase-header">
+        <h3>Phase 1: Database Entities & TypeORM Migration</h3>
+        <span class="phase-badge">Days 1 - 2</span>
+      </div>
+      <p><b>Goal:</b> Establish database tables in PostgreSQL matching the plan data model.</p>
+      <ul style="margin-left: 20px; font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">
+        <li>Create <code>tbl_login_clients</code>: stores <code>clientId</code>, <code>clientName</code>, <code>redirectUris</code> (text[]), <code>allowedOrigins</code> (text[]), <code>requireDomain</code> (boolean).</li>
+        <li>Create <code>tbl_login_transactions</code>: stores active login handshakes, PKCE <code>code_challenge</code>, <code>nonce</code>, and 10-minute expiry.</li>
+        <li>Create <code>tbl_login_codes</code>: stores 60-second single-use authorization codes.</li>
+        <li>Create <code>tbl_login_refresh_tokens</code>: stores argon2-hashed refresh tokens, family IDs, and rotation replacement pointers.</li>
+        <li>Create <code>tbl_login_consents</code>: records player consent per game.</li>
+        <li><b>Migration Command:</b> Run <code>npm run typeorm:migration:generate -- -n CreateLoginProviderTables</code>, then <code>npm run typeorm:migration:run</code>.</li>
+      </ul>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="card">
+      <div class="phase-header">
+        <h3>Phase 2: ES256 Asymmetric Key Service & JWKS Endpoint</h3>
+        <span class="phase-badge">Days 3 - 4</span>
+      </div>
+      <p><b>Goal:</b> Issue cryptographically verifiable JWTs without exposing private keys.</p>
+      <ul style="margin-left: 20px; font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">
+        <li>Generate an ES256 (NIST P-256) keypair. Store private key in AWS Secrets Manager or KMS; store public JWK in <code>tbl_login_signing_keys</code>.</li>
+        <li>Implement <code>GET /.well-known/jwks.json</code>: returns active public keys so game backends can verify tokens offline.</li>
+        <li>Implement <code>GET /.well-known/openid-configuration</code>: standard discovery document returning issuer, endpoints, and supported claims.</li>
+      </ul>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="card">
+      <div class="phase-header">
+        <h3>Phase 3: Wallet SIWE Verification & Polygon .og Domain Service</h3>
+        <span class="phase-badge">Days 5 - 7</span>
+      </div>
+      <p><b>Goal:</b> Verify wallet signatures for free (0 gas) and verify .og domain ownership live on Polygon.</p>
+      <ul style="margin-left: 20px; font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">
+        <li>Implement <code>GET /api/login/nonce</code>: generates a random 16-byte nonce tied to transaction ID.</li>
+        <li>Implement <code>POST /api/login/verify</code>: parses EIP-4361 SIWE message, checks domain/URI/nonce/expiry, recovers signer address with ethers v5/v6, and sets HttpOnly session cookie.</li>
+        <li>Implement <code>DomainOwnershipService</code>:
+          <br>1. Fetch candidate domains from <code>tbl_domain_detail_bc</code>.
+          <br>2. Call Polygon contract <code>0xa9a6A3626993D487d2Dbda3173cf58cA1a9D9e9f</code> via <code>UdAlchmeyService</code> to verify <code>ownerOf(namehash)</code> and <code>expiryOf(tokenId)</code>.
+          <br>3. Call <code>reverseNameOf(wallet)</code> to designate primary domain.
+          <br>4. Cache results for 60 seconds using <code>@nestjs/cache-manager</code>.</li>
+      </ul>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="card">
+      <div class="phase-header">
+        <h3>Phase 4: OIDC Core Endpoints (/authorize & /token)</h3>
+        <span class="phase-badge">Days 8 - 10</span>
+      </div>
+      <p><b>Goal:</b> Complete standard PKCE authorization code exchange and token issuance.</p>
+      <ul style="margin-left: 20px; font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">
+        <li>Implement <code>GET /authorize</code>: validates client and PKCE challenge, redirects to hosted login UI.</li>
+        <li>Implement <code>POST /api/login/consent</code>: records domain choice, generates 60s authorization code.</li>
+        <li>Implement <code>POST /token</code>:
+          <br>• For <code>grant_type=authorization_code</code>: validates <code>SHA256(code_verifier) === code_challenge</code>, burns code.
+          <br>• Computes Pairwise Sub: <code>HMAC_SHA256(client_id, walletAddress)</code>.
+          <br>• Issues 1-hour ES256 ID Token & 7-day rotating Refresh Token.
+          <br>• For <code>grant_type=refresh_token</code>: rotates token; re-checks on-chain Polygon ownership; if transferred, sets <code>domain_status: "lost"</code> (Decision D3).</li>
+      </ul>
+    </div>
+
+    <!-- Phase 5 -->
+    <div class="card">
+      <div class="phase-header">
+        <h3>Phase 5: Client SDK Packages (@endlessdomains/login & login-verify)</h3>
+        <span class="phase-badge">Days 11 - 13</span>
+      </div>
+      <p><b>Goal:</b> Publish lightweight npm packages and CDN scripts for games.</p>
+      <ul style="margin-left: 20px; font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">
+        <li><code>@endlessdomains/login</code> (&lt;15KB gzip): PKCE generator, popup modal with <code>postMessage</code>, automatic redirect fallback, token refresh timer.</li>
+        <li><code>@endlessdomains/login-verify</code>: lightweight verifier caching <code>/.well-known/jwks.json</code> for Node/Express game servers.</li>
+      </ul>
+    </div>
+
+    <!-- Phase 6 -->
+    <div class="card">
+      <div class="phase-header">
+        <h3>Phase 6: Pilot Integration with Endless Vault</h3>
+        <span class="phase-badge">Days 14 - 15</span>
+      </div>
+      <p><b>Goal:</b> Prove the full flow in a live game.</p>
+      <ul style="margin-left: 20px; font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">
+        <li>Register <code>endless-vault</code> in <code>tbl_login_clients</code>.</li>
+        <li>Replace unverified <code>#idIn</code> text box in <code>endless-vault_14 1.html</code> with <code>login.renderButton()</code>.</li>
+        <li>Update pilot HUD to display <b>verified .og domain</b> and unlock Tier 3 Gold Armor!</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Section 4: Module Registration -->
+  <section>
+    <h2>4. Registration in app.module.ts</h2>
+    <p>Once built, register the module in <code>src/app.module.ts</code> like any standard feature module:</p>
+
+    <pre><code>// src/app.module.ts
+import { LoginProviderModule } from '@components/login-provider/login-provider.module';
+
+@Module({
+  imports: [
+    // ... existing modules
+    Web3AuthModule,
+    UDIntegrationModule,
+    LoginProviderModule, // &lt;-- Add Login Provider here
+  ],
+})
+export class AppModule {}</code></pre>
+  </section>
+</div>
+
+<button class="theme-toggle" id="themeToggle" title="Toggle Theme">🌓</button>
+
+<script>
+  const btn = document.getElementById('themeToggle');
+  btn.onclick = () => {
+    const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+  };
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Endless Domains - Login SDK Live Whiteboard & Architecture Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #090B10;
+    --grid: rgba(255, 255, 255, 0.04);
+    --grid-line: rgba(255, 255, 255, 0.02);
+    --surface: #121622;
+    --surface-elevated: #181E2E;
+    --surface-hover: #1E263B;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-bright: rgba(255, 255, 255, 0.22);
+    --text: #F1F4FA;
+    --text-muted: #8E9AB0;
+    --text-dim: #5A6478;
+    
+    /* Accents */
+    --accent: #4F6BFF;
+    --accent-glow: rgba(79, 107, 255, 0.4);
+    --cyan: #22D3EE;
+    --cyan-glow: rgba(34, 211, 238, 0.4);
+    --green: #10B981;
+    --green-glow: rgba(16, 185, 129, 0.4);
+    --amber: #F59E0B;
+    --amber-glow: rgba(245, 158, 11, 0.35);
+    --purple: #A855F7;
+    --purple-glow: rgba(168, 85, 247, 0.35);
+    --rose: #F43F5E;
+    
+    --font-ui: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  [data-theme="light"] {
+    --bg: #F8FAFC;
+    --grid: rgba(0, 0, 0, 0.05);
+    --grid-line: rgba(0, 0, 0, 0.025);
+    --surface: #FFFFFF;
+    --surface-elevated: #F1F5F9;
+    --surface-hover: #E2E8F0;
+    --border: rgba(0, 0, 0, 0.09);
+    --border-bright: rgba(0, 0, 0, 0.2);
+    --text: #0F172A;
+    --text-muted: #64748B;
+    --text-dim: #94A3B8;
+    --accent: #2563EB;
+    --accent-glow: rgba(37, 99, 235, 0.2);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Whiteboard background grid */
+  .grid-pattern {
+    background-image: 
+      radial-gradient(var(--grid) 1.5px, transparent 1.5px),
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px, 140px 140px, 140px 140px;
+    background-position: 0 0, -1px -1px, -1px -1px;
+  }
+
+  /* Top Navigation Bar */
+  header.top-bar {
+    height: 58px;
+    padding: 0 20px;
+    background: rgba(18, 22, 34, 0.9);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 50;
+    flex-shrink: 0;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-badge {
+    background: linear-gradient(135deg, #2639ED, #22D3EE);
+    color: #fff;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+  }
+  .brand-title {
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .brand-sub {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-pill {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .btn-pill:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-bright);
+    color: #fff;
+  }
+  .btn-pill.primary {
+    background: linear-gradient(135deg, #2639ED, #3B82F6);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 2px 10px var(--accent-glow);
+  }
+  .btn-pill.primary:hover {
+    box-shadow: 0 4px 18px var(--accent-glow);
+    transform: translateY(-1px);
+  }
+
+  /* Main Workspace Split Layout */
+  .main-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 470px;
+    min-height: 0;
+    position: relative;
+  }
+  @media (max-width: 1280px) {
+    .main-layout { grid-template-columns: 1fr 410px; }
+  }
+
+  /* Whiteboard Canvas Area */
+  .whiteboard-container {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Floating Presenter Step Bar */
+  .presenter-bar {
+    position: absolute;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(18, 22, 34, 0.94);
+    border: 1px solid var(--border-bright);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    border-radius: 20px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 40;
+    max-width: 94%;
+  }
+  .step-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 290px;
+    max-width: 400px;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 0 16px;
+  }
+  .step-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+  .step-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .step-summary {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* SVG Flowchart & Animated Connector Cables */
+  .flowchart-svg-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .flow-path {
+    stroke: var(--border-bright);
+    stroke-width: 2;
+    fill: none;
+    transition: stroke 0.35s ease, stroke-width 0.35s ease;
+  }
+  .flow-path.active {
+    stroke: var(--cyan);
+    stroke-width: 3.5;
+    filter: drop-shadow(0 0 10px var(--cyan-glow));
+    stroke-dasharray: 8 5;
+    animation: dashCable 1s linear infinite;
+  }
+  .flow-path.completed {
+    stroke: var(--green);
+    stroke-width: 2.5;
+    opacity: 0.65;
+  }
+  @keyframes dashCable {
+    to { stroke-dashoffset: -26; }
+  }
+
+  /* Whiteboard Interactive Nodes */
+  .nodes-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: auto;
+  }
+  .wb-node {
+    position: absolute;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    width: 230px;
+    box-shadow: 0 8px 26px rgba(0,0,0,0.35);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    user-select: none;
+  }
+  .wb-node:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+  }
+  .wb-node.active-actor {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px var(--cyan-glow), 0 14px 36px rgba(0,0,0,0.55);
+    background: var(--surface-elevated);
+    transform: scale(1.03);
+  }
+  .wb-node-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .wb-node-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .wb-node-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .wb-node-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .wb-node-body {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.45;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+  .wb-node-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    padding: 3px 7px;
+    border-radius: 5px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    margin-top: 6px;
+  }
+
+  /* Node Colors */
+  .node-game .wb-node-icon { background: rgba(79, 107, 255, 0.16); color: #7F8CFF; }
+  .node-wallet .wb-node-icon { background: rgba(245, 158, 11, 0.16); color: #FBBF24; }
+  .node-login .wb-node-icon { background: rgba(34, 211, 238, 0.16); color: #22D3EE; }
+  .node-chain .wb-node-icon { background: rgba(168, 85, 247, 0.16); color: #C084FC; }
+  .node-server .wb-node-icon { background: rgba(16, 185, 129, 0.16); color: #34D399; }
+
+  /* Right Sidebar (Tabs: Game Sandbox, Live Inspector, Speaker Script) */
+  .sidebar {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 30;
+  }
+  .sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-elevated);
+    padding: 6px 10px 0;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .tab-btn {
+    padding: 8px 12px;
+    border-radius: 8px 8px 0 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .tab-btn:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .tab-btn.active {
+    color: var(--text);
+    background: var(--surface);
+    border-top: 2px solid var(--cyan);
+  }
+  .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+  }
+
+  /* Realistic Endless Vault Game Mock Card */
+  .game-mock-card {
+    background: #080D15;
+    border: 1px solid rgba(60, 242, 176, 0.28);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: inset 0 0 24px rgba(60, 242, 176, 0.06);
+  }
+  .game-mock-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .game-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: #3CF2B0;
+    text-transform: uppercase;
+  }
+  .game-who-bar {
+    background: rgba(14, 26, 38, 0.9);
+    border: 1px solid rgba(60, 242, 176, 0.22);
+    border-radius: 999px;
+    padding: 4px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .game-who-id {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: #FDC651;
+  }
+  .game-who-status {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+  .game-who-status.unverified {
+    background: rgba(255, 255, 255, 0.1);
+    color: #8E9AB0;
+  }
+  .game-who-status.verified {
+    background: rgba(60, 242, 176, 0.22);
+    color: #3CF2B0;
+    font-weight: 700;
+    border: 1px solid #3CF2B0;
+  }
+  .mech-preview {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .mech-avatar {
+    width: 54px;
+    height: 54px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1E293B, #0F172A);
+    border: 2px solid #64748B;
+    display: grid;
+    place-items: center;
+    font-size: 26px;
+    position: relative;
+    transition: all 0.35s ease;
+  }
+  .mech-avatar.gold-tier {
+    border-color: #FDC651;
+    box-shadow: 0 0 18px rgba(253, 198, 81, 0.5);
+    background: radial-gradient(circle at 30% 30%, #7A4B1A, #1C1206);
+  }
+  .mech-avatar.gold-tier::after {
+    content: '👑';
+    position: absolute;
+    top: -9px;
+    right: -7px;
+    font-size: 14px;
+  }
+
+  /* The Official Branded "Sign in with Domain" Button */
+  .domain-sign-in-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #2639ED, #4F6BFF);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #fff;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(38, 57, 237, 0.4);
+    transition: all 0.2s ease;
+    margin-top: 10px;
+  }
+  .domain-sign-in-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(38, 57, 237, 0.55);
+    background: linear-gradient(135deg, #3247FF, #5E7AFF);
+  }
+  .domain-sign-in-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Realistic SDK Interactive Modal (Popup simulation) */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .login-popup-window {
+    width: 440px;
+    background: #141416;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.75);
+    display: flex;
+    flex-direction: column;
+    animation: popupScale 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes popupScale {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .popup-browser-chrome {
+    height: 40px;
+    background: #0D0E12;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 8px;
+  }
+  .window-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .window-dot.r { background: #FF5F56; }
+  .window-dot.y { background: #FFBD2E; }
+  .window-dot.g { background: #27C93F; }
+  .url-pill {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #8E9AB0;
+    padding: 4px 10px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .popup-body {
+    padding: 24px;
+  }
+
+  /* Code & Token Box */
+  pre.code-view {
+    background: #0B0D14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: #E2E8F0;
+    overflow-x: auto;
+    margin-top: 8px;
+    max-height: 300px;
+  }
+  .json-key { color: #93C5FD; }
+  .json-str { color: #86EFAC; }
+  .json-num { color: #FDE047; }
+  .json-bool { color: #F472B6; }
+
+  /* Meeting Speaker Notes Cards */
+  .notes-section {
+    background: rgba(79, 107, 255, 0.06);
+    border: 1px solid rgba(79, 107, 255, 0.22);
+    border-radius: 14px;
+    padding: 15px;
+    margin-bottom: 14px;
+  }
+  .notes-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #7F8CFF;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .notes-p {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .notes-bullet {
+    margin-left: 18px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 5px;
+  }
+
+  /* Pulse dot */
+  .badge-pulse {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+    animation: pulseGlow 1.8s infinite;
+  }
+  @keyframes pulseGlow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.85); }
+  }
+</style>
+</head>
+<body class="grid-pattern">
+
+<!-- Header -->
+<header class="top-bar">
+  <div class="brand">
+    <span class="brand-badge">Whiteboard SDK</span>
+    <div class="brand-title">
+      Endless Domains Login SDK
+      <span class="brand-sub">· Architecture & Meeting Presentation</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-pill" id="btnReset" title="Reset presentation to beginning">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      Reset Flow
+    </button>
+    <button class="btn-pill" id="btnThemeToggle" title="Toggle Light/Dark Theme">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      Theme
+    </button>
+    <button class="btn-pill primary" id="btnLaunchSDKModal">
+      <span class="badge-pulse"></span>
+      Try Live SDK Popup
+    </button>
+  </div>
+</header>
+
+<!-- Main Workspace -->
+<div class="main-layout">
+
+  <!-- Whiteboard Presentation Canvas -->
+  <div class="whiteboard-container" id="whiteboard">
+    
+    <!-- SVG Connections Layer -->
+    <svg class="flowchart-svg-layer" id="svgCanvas">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="var(--cyan)" />
+        </marker>
+        <marker id="arrow-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="var(--green)" />
+        </marker>
+      </defs>
+
+      <path id="path1" class="flow-path" d="" marker-end="url(#arrow)"/>
+      <path id="path2" class="flow-path" d="" marker-end="url(#arrow)"/>
+      <path id="path3" class="flow-path" d="" marker-end="url(#arrow)"/>
+      <path id="path4" class="flow-path" d="" marker-end="url(#arrow)"/>
+      <path id="path5" class="flow-path" d="" marker-end="url(#arrow)"/>
+      <path id="path6" class="flow-path" d="" marker-end="url(#arrow)"/>
+      <path id="path7" class="flow-path" d="" marker-end="url(#arrow)"/>
+      <path id="path8" class="flow-path" d="" marker-end="url(#arrow)"/>
+      <path id="path9" class="flow-path" d="" marker-end="url(#arrow)"/>
+      <path id="path10" class="flow-path" d="" marker-end="url(#arrow)"/>
+    </svg>
+
+    <!-- Whiteboard Actor Nodes -->
+    <div class="nodes-layer" id="nodesLayer">
+      
+      <!-- Node 1: Game Client (Endless Vault) -->
+      <div class="wb-node node-game" id="nodeGame" style="left: 6%; top: 12%;">
+        <div class="wb-node-header">
+          <div class="wb-node-icon">🎮</div>
+          <div>
+            <div class="wb-node-title">Game Client</div>
+            <div class="wb-node-sub">Endless Vault</div>
+          </div>
+        </div>
+        <div class="wb-node-body">
+          Loads <code>@endlessdomains/login</code>.<br>
+          Calls <code>signIn()</code> with PKCE.
+        </div>
+        <span class="wb-node-pill">Port 3000 / WebGL</span>
+      </div>
+
+      <!-- Node 2: Player Wallet -->
+      <div class="wb-node node-wallet" id="nodeWallet" style="left: 6%; top: 58%;">
+        <div class="wb-node-header">
+          <div class="wb-node-icon">🦊</div>
+          <div>
+            <div class="wb-node-title">Player Wallet</div>
+            <div class="wb-node-sub">MetaMask / AppKit</div>
+          </div>
+        </div>
+        <div class="wb-node-body">
+          Holds cryptographic private key.<br>
+          Signs free SIWE message (0 gas).
+        </div>
+        <span class="wb-node-pill">EIP-4361 Signer</span>
+      </div>
+
+      <!-- Node 3: Endless Login Service (OIDC Core) -->
+      <div class="wb-node node-login" id="nodeLogin" style="left: 38%; top: 34%;">
+        <div class="wb-node-header">
+          <div class="wb-node-icon">🛡️</div>
+          <div>
+            <div class="wb-node-title">Login Service</div>
+            <div class="wb-node-sub">login.endlessdomains.io</div>
+          </div>
+        </div>
+        <div class="wb-node-body">
+          NestJS module. OIDC provider.<br>
+          Validates SIWE, signs JWT (ES256).
+        </div>
+        <span class="wb-node-pill">OIDC + SIWE Core</span>
+      </div>
+
+      <!-- Node 4: Blockchain Smart Contracts -->
+      <div class="wb-node node-chain" id="nodeChain" style="left: 70%; top: 12%;">
+        <div class="wb-node-header">
+          <div class="wb-node-icon">⛓️</div>
+          <div>
+            <div class="wb-node-title">Smart Contracts</div>
+            <div class="wb-node-sub">Polygon / Ethereum</div>
+          </div>
+        </div>
+        <div class="wb-node-body">
+          <code>ownerOf(namehash)</code><br>
+          <code>expiryOf(tokenId)</code> on Polygon.
+        </div>
+        <span class="wb-node-pill">Alchemy RPC / On-Chain</span>
+      </div>
+
+      <!-- Node 5: Game Server & Verifier -->
+      <div class="wb-node node-server" id="nodeServer" style="left: 70%; top: 58%;">
+        <div class="wb-node-header">
+          <div class="wb-node-icon">⚡</div>
+          <div>
+            <div class="wb-node-title">Game Server</div>
+            <div class="wb-node-sub">Leaderboard / Matchmaker</div>
+          </div>
+        </div>
+        <div class="wb-node-body">
+          <code>@endlessdomains/login-verify</code><br>
+          Checks JWT against JWKS public key.
+        </div>
+        <span class="wb-node-pill">Node / Cloudflare Worker</span>
+      </div>
+
+    </div>
+
+    <!-- Presenter Bottom Navigation Bar -->
+    <div class="presenter-bar">
+      <button class="btn-pill" id="btnPrevStep" title="Previous step">
+        ◀ Prev
+      </button>
+
+      <div class="step-info">
+        <span class="step-badge" id="stepCounterBadge">STEP 1 OF 10</span>
+        <div class="step-name" id="stepTitleText">Player Clicks "Sign in with Domain"</div>
+        <div class="step-summary" id="stepDescText">Game SDK opens popup to /authorize with PKCE code_challenge.</div>
+      </div>
+
+      <button class="btn-pill primary" id="btnNextStep" title="Next step">
+        Next ▶
+      </button>
+
+      <button class="btn-pill" id="btnAutoPlay" title="Auto-advance through all 10 steps">
+        ▶ Auto-Tour
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Right Sidebar (Interactive Sandbox & Notes) -->
+  <aside class="sidebar">
+    
+    <!-- Sidebar Navigation Tabs -->
+    <div class="sidebar-tabs">
+      <button class="tab-btn active" data-tab="tab-sandbox">🎮 Game Demo</button>
+      <button class="tab-btn" data-tab="tab-inspector">🔍 Inspector (JWT)</button>
+      <button class="tab-btn" data-tab="tab-notes">🎙️ Speaker Script</button>
+    </div>
+
+    <!-- Tab 1: Live Game Demo & SDK Preview -->
+    <div class="sidebar-content" id="tab-sandbox">
+      
+      <!-- Mini Endless Vault Header simulation -->
+      <div class="game-mock-card">
+        <div class="game-mock-top">
+          <span class="game-tag">ENDLESS VAULT ARENA</span>
+          <div class="game-who-bar">
+            <span style="font-size: 13px;">🤖</span>
+            <span class="game-who-id" id="simPlayerName">guest.og</span>
+            <span class="game-who-status unverified" id="simPlayerTag">unverified</span>
+          </div>
+        </div>
+
+        <div class="mech-preview">
+          <div class="mech-avatar" id="simMechAvatar">🤖</div>
+          <div>
+            <div style="font-weight: 700; font-size: 13.5px;" id="simMechTitle">Warden · Standard Armour</div>
+            <div style="font-size: 11.5px; color: var(--text-muted);" id="simMechPerk">No linked domain · Type or login to upgrade</div>
+          </div>
+        </div>
+
+        <!-- The Button from the plan -->
+        <button class="domain-sign-in-btn" id="btnSimSignIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          Sign in with your domain
+        </button>
+
+        <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted); text-align: center;">
+          Powered by <b>@endlessdomains/login</b> (under 15KB)
+        </div>
+      </div>
+
+      <!-- Interactive Step Trigger -->
+      <div style="background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 14px;">
+        <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cyan); margin-bottom: 6px;">
+          Current Presentation State
+        </div>
+        <p style="font-size: 13px; line-height: 1.5; color: var(--text); margin-bottom: 10px;" id="simStateExplanation">
+          Click <b>"Sign in with your domain"</b> above or use the Whiteboard <b>Next ▶</b> button below to see the data flow in real-time.
+        </p>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-pill" id="btnSimFastForward" style="flex: 1; justify-content: center;">
+            ⚡ Fast Complete Login
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Concept Explainer -->
+      <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+        <b style="color: var(--text);">Why this replaces text input:</b> In Endless Vault, players currently just type <code>maya.og</code> into an input box with zero proof. With this SDK, Endless Domains verifies their wallet on-chain, issues an unforgeable JWT, and gives them verified bragging rights!
+      </div>
+
+    </div>
+
+    <!-- Tab 2: Live Protocol & Token Inspector -->
+    <div class="sidebar-content" id="tab-inspector" style="display: none;">
+      
+      <div style="font-size: 12px; font-weight: 700; color: var(--cyan); margin-bottom: 6px;">
+        CURRENT HTTP / PROTOCOL PACKET
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;" id="packetLabel">
+        Step 1: GET /authorize
+      </div>
+      <pre class="code-view" id="packetPayloadView">Loading...</pre>
+
+      <div style="font-size: 12px; font-weight: 700; color: var(--green); margin-top: 16px; margin-bottom: 6px;">
+        DECODED ES256 ID TOKEN (JWT)
+      </div>
+      <pre class="code-view" id="tokenPayloadView">
+{
+  <span class="json-key">"iss"</span>: <span class="json-str">"https://login.endlessdomains.io"</span>,
+  <span class="json-key">"aud"</span>: <span class="json-str">"endless-vault"</span>,
+  <span class="json-key">"sub"</span>: <span class="json-str">"pw_9c1f82e0a4f617d3b9e8"</span>,
+  <span class="json-key">"name"</span>: <span class="json-str">"akshat.og"</span>,
+  <span class="json-key">"domain"</span>: <span class="json-str">"akshat.og"</span>,
+  <span class="json-key">"domain_provider"</span>: <span class="json-str">"ud"</span>,
+  <span class="json-key">"domain_chain_id"</span>: <span class="json-num">137</span>,
+  <span class="json-key">"domain_status"</span>: <span class="json-str">"owned"</span>,
+  <span class="json-key">"wallet_address"</span>: <span class="json-str">"0x8FD5c3A7b4E19F68c32A1F82bD09a16Be4D0"</span>,
+  <span class="json-key">"amr"</span>: [<span class="json-str">"siwe"</span>],
+  <span class="json-key">"exp"</span>: <span class="json-num">1763468410</span>
+}
+      </pre>
+
+      <div style="margin-top: 12px; font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">
+        <b>Pairwise Sub (Decision D2):</b> <code>sub</code> is unique per game, preventing games from cross-tracking players. If <code>akshat.og</code> is sold, the next token renewal switches <code>domain_status</code> to <code>"lost"</code>.
+      </div>
+
+    </div>
+
+    <!-- Tab 3: Speaker Script & Meeting Cheat Sheet -->
+    <div class="sidebar-content" id="tab-notes" style="display: none;">
+      
+      <div class="notes-section">
+        <div class="notes-title">🎯 30-Second Elevator Pitch for Mohit Sir</div>
+        <p class="notes-p">
+          "Today, any player in Endless Vault can spoof being <code>satoshinakomoto.og</code> by just typing it in. 
+          Our Login SDK makes Endless Domains the <b>'Sign in with Google'</b> of Web3 games: players sign a free, 0-gas signature in MetaMask, we verify their .og domain on Polygon in real-time, and hand the game a cryptographically signed identity."
+        </p>
+      </div>
+
+      <div class="notes-section" style="border-color: rgba(34, 211, 238, 0.3);">
+        <div class="notes-title" style="color: var(--cyan);">💬 What to Say at Each Step</div>
+        <div id="dynamicSpeakerNote">
+          <b style="color: var(--text);">Step 1:</b> "Explain that the game doesn't need wallet libraries. It just opens our hosted popup with PKCE security, exactly like modern OAuth2."
+        </div>
+      </div>
+
+      <div class="notes-section" style="border-color: rgba(245, 158, 11, 0.3);">
+        <div class="notes-title" style="color: var(--amber);">🛡️ Answers to Hard Meeting Questions</div>
+        
+        <p class="notes-p"><b style="color: var(--text);">Q: Can it be made for .og domains instead of .eth?</b></p>
+        <p class="notes-bullet"><b>YES! In fact, .og is the #1 PRIMARY focus from Day 1!</b> "Sign In With Ethereum" (SIWE) only describes the cryptographic wallet standard used by MetaMask on EVM chains. The domain verified on-chain is our flagship <code>.og</code> on Polygon (Chain 137). Support for <code>.eth</code> (ENS) is intentionally deferred to Phase 8.</p>
+
+        <p class="notes-p" style="margin-top: 8px;"><b style="color: var(--text);">Q: What if the player sells the domain right after logging in?</b></p>
+        <p class="notes-bullet">ID tokens expire in 1 hour. On refresh, our backend checks the Polygon contract again. If transferred, the player's name reverts to their short wallet, but they keep their game progress (Decision D3).</p>
+        
+        <p class="notes-p" style="margin-top: 8px;"><b style="color: var(--text);">Q: Does signing in cost gas or transaction fees?</b></p>
+        <p class="notes-bullet">Zero gas! EIP-4361 (SIWE) uses off-chain ECDSA signature math. The player never spends a penny.</p>
+
+        <p class="notes-p" style="margin-top: 8px;"><b style="color: var(--text);">Q: What if a player has no domain?</b></p>
+        <p class="notes-bullet">Decision D8 allows 'Wallet-Only' login, and shows a 'Get your name on Endless Domains' funnel link!</p>
+      </div>
+
+    </div>
+
+  </aside>
+
+</div>
+
+<!-- Realistic SDK Popup Modal (Simulating login.endlessdomains.io) -->
+<div class="modal-overlay" id="sdkModalOverlay">
+  <div class="login-popup-window">
+    
+    <div class="popup-browser-chrome">
+      <div class="window-dot r" id="btnCloseModal"></div>
+      <div class="window-dot y"></div>
+      <div class="window-dot g"></div>
+      <div class="url-pill">🔒 https://login.endlessdomains.io/authorize?client_id=endless-vault</div>
+    </div>
+
+    <div class="popup-body" id="popupScreenContainer">
+      
+      <!-- Stage 1: Connect Wallet -->
+      <div id="popupScreen1">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(79, 107, 255, 0.15); display: inline-grid; place-items: center; font-size: 24px; margin-bottom: 8px;">
+            👾
+          </div>
+          <h2 style="font-size: 18px; margin-bottom: 4px;">Endless Vault</h2>
+          <p style="font-size: 13px; color: var(--text-muted);">wants you to sign in with your Web3 domain</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="btn-pill" id="btnPopupConnectMM" style="padding: 12px 16px; border-radius: 12px; justify-content: flex-start; gap: 12px; width: 100%;">
+            <span style="font-size: 20px;">🦊</span>
+            <div style="text-align: left;">
+              <div style="font-weight: 700; font-size: 13.5px;">MetaMask</div>
+              <div style="font-size: 11px; color: var(--text-muted);">0x8FD5...Be4D0 (Polygon 137)</div>
+            </div>
+          </button>
+          <button class="btn-pill" style="padding: 12px 16px; border-radius: 12px; justify-content: flex-start; gap: 12px; width: 100%; opacity: 0.6;">
+            <span style="font-size: 20px;">📱</span>
+            <div style="text-align: left;">
+              <div style="font-weight: 700; font-size: 13.5px;">WalletConnect</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Scan with Rainbow or Coinbase</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stage 2: SIWE Signature Screen -->
+      <div id="popupScreen2" style="display: none;">
+        <div style="margin-bottom: 14px;">
+          <h3 style="font-size: 16px; margin-bottom: 4px;">Sign In With Ethereum (SIWE)</h3>
+          <p style="font-size: 12px; color: var(--text-muted);">Free signature to prove you own wallet 0x8FD5...Be4D0</p>
+        </div>
+
+        <pre class="code-view" style="font-size: 10.5px; margin-bottom: 14px;">
+login.endlessdomains.io wants you to sign in:
+URI: https://login.endlessdomains.io
+Chain ID: 137 (Polygon)
+Nonce: 8f2c4a91e0b74d1a
+Statement: Sign in to Endless Vault with your .og domain on Endless Domains. 
+This is free and does not move any money.</pre>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-pill" id="btnCancelSign" style="flex: 1; justify-content: center;">Cancel</button>
+          <button class="btn-pill primary" id="btnConfirmSign" style="flex: 1.4; justify-content: center;">Sign Message</button>
+        </div>
+      </div>
+
+      <!-- Stage 3: Pick Domain Screen -->
+      <div id="popupScreen3" style="display: none;">
+        <div style="margin-bottom: 12px;">
+          <h3 style="font-size: 16px; margin-bottom: 4px;">Choose Your Domain Identity</h3>
+          <p style="font-size: 12px; color: var(--text-muted);">Confirmed on-chain via Polygon smart contract:</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
+          <label style="background: rgba(34, 211, 238, 0.08); border: 1.5px solid var(--cyan); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="radio" name="domainChoice" value="akshat.og" checked>
+              <div>
+                <b style="font-size: 14px; color: #fff;">akshat.og</b>
+                <div style="font-size: 10.5px; color: var(--text-muted);">Unstoppable / Polygon · Expiry: Never</div>
+              </div>
+            </div>
+            <span style="background: var(--cyan); color: #000; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px;">PRIMARY</span>
+          </label>
+
+          <label style="background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="radio" name="domainChoice" value="vaultking.og">
+              <div>
+                <b style="font-size: 14px; color: #fff;">vaultking.og</b>
+                <div style="font-size: 10.5px; color: var(--text-muted);">Unstoppable / Polygon · Rare Tier</div>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-pill primary" id="btnConfirmDomain" style="width: 100%; justify-content: center;">
+            Confirm & Enter Endless Vault
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+// =========================================================================
+// 10 ARCHITECTURE STEPS DATA & PROTOCOL SPECS (Acc to domain-login-sdk-plan)
+// =========================================================================
+const STEPS = [
+  {
+    step: 1,
+    title: "Player Clicks 'Sign in with Domain'",
+    actor: "nodeGame",
+    desc: "Game SDK opens popup to login.endlessdomains.io/authorize with client_id, state, and PKCE code_challenge.",
+    pathId: "path1",
+    activeLabel: "1. GET /authorize?code_challenge=...",
+    packet: `GET /authorize HTTP/1.1
+Host: login.endlessdomains.io
+Query Parameters:
+  client_id: "endless-vault"
+  redirect_uri: "https://endlessvault.game/callback"
+  response_type: "code"
+  scope: "openid profile wallet"
+  state: "st_81c7f4e9a0"
+  code_challenge: "E9Mel-audo7wXuU61ueErDwQLKerDEPfkXYqJMVwmEB"
+  code_challenge_method: "S256"`,
+    speakerNote: "Notice that the game does not need to bundle heavy Web3 libraries or wallet connect SDKs! It just calls EndlessLogin.signIn(). The SDK handles PKCE code generation and pops up our secure domain login subdomain."
+  },
+  {
+    step: 2,
+    title: "Login Page Requests Wallet Connection",
+    actor: "nodeLogin",
+    desc: "Login service shows Endless Vault's logo and prompts player to connect their MetaMask or WalletConnect.",
+    pathId: "path2",
+    activeLabel: "2. AppKit Wallet Connect",
+    packet: `EVENT: Reown AppKit Connection
+Chain: Polygon (ID: 137)
+Selected Wallet: MetaMask
+Address Detected: 0x8FD5c3A7b4E19F68c32A1F82bD09a16Be4D0`,
+    speakerNote: "Our login page is hosted on its own subdomain (login.endlessdomains.io) with strict frame-ancestors headers so it cannot be clickjacked. We reuse the existing AppKit/wagmi wallet connectors."
+  },
+  {
+    step: 3,
+    title: "Login Service Issues SIWE Challenge & Nonce",
+    actor: "nodeLogin",
+    desc: "Service generates a 5-minute single-use nonce and prepares the EIP-4361 Sign In With Ethereum message.",
+    pathId: "path3",
+    activeLabel: "3. Issue SIWE Nonce",
+    packet: `POST /api/login/nonce HTTP/1.1
+Host: login.endlessdomains.io
+Response:
+{
+  "nonce": "8f2c4a91e0b74d1a",
+  "requestId": "lt_3fa85f64",
+  "expiresAt": "2026-11-18T11:25:05Z"
+}`,
+    speakerNote: "To prevent replay attacks, the server issues a random, single-use cryptographic nonce tied to this specific login transaction ID. It expires in 5 minutes."
+  },
+  {
+    step: 4,
+    title: "Wallet Signs SIWE Message (Free, 0 Gas)",
+    actor: "nodeWallet",
+    desc: "Player confirms in MetaMask. An off-chain ECDSA signature is produced with zero gas or smart contract fees.",
+    pathId: "path4",
+    activeLabel: "4. Return Signature (EIP-4361)",
+    packet: `POST /api/login/verify HTTP/1.1
+Host: login.endlessdomains.io
+Body:
+{
+  "message": "login.endlessdomains.io wants you to sign in with your Ethereum account...",
+  "signature": "0x3a4b9c1d8f7e2a5b6c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f"
+}`,
+    speakerNote: "Crucial point for players: Signing in is completely FREE. It does not touch the blockchain yet and costs no gas. The signature cryptographically proves that the user controls the private key of that wallet."
+  },
+  {
+    step: 5,
+    title: "On-Chain Polygon Smart Contract Check",
+    actor: "nodeLogin",
+    desc: "Backend confirms candidates from tbl_domain_detail_bc directly on-chain via ownerOf & expiryOf.",
+    pathId: "path5",
+    activeLabel: "5. RPC ownerOf(namehash)",
+    packet: `RPC eth_call
+To: 0xa9a6A3626993D487d2Dbda3173cf58cA1a9D9e9f (UD Registry)
+Function: ownerOf(0x42f7c0...)
+Result: 0x8FD5c3A7b4E19F68c32A1F82bD09a16Be4D0 (MATCH!)
+Expiry: 0 (No expiration / perpetual)`,
+    speakerNote: "Even though our database has cached domain listings, we never trust cache alone at sign-in. We call the Polygon smart contract live via Alchemy to verify that the wallet still currently owns akshat.og."
+  },
+  {
+    step: 6,
+    title: "Domain List & Consent Screen Shown",
+    actor: "nodeChain",
+    desc: "Blockchain confirms ownership. Player chooses 'akshat.og' and approves sharing name & wallet with the game.",
+    pathId: "path6",
+    activeLabel: "6. Domains Confirmed",
+    packet: `POST /api/login/consent HTTP/1.1
+Body:
+{
+  "chosenDomain": "akshat.og",
+  "scopesApproved": ["openid", "profile", "wallet"],
+  "clientId": "endless-vault"
+}`,
+    speakerNote: "The player sees their confirmed domains with provider badges and their primary reverse-record domain first. If a player owns no domains, our fallback lets them play as wallet-only with a 'Claim your name' button."
+  },
+  {
+    step: 7,
+    title: "Service Issues Authorization Code via postMessage",
+    actor: "nodeLogin",
+    desc: "Service issues a single-use 60-second authorization code and closes the popup window.",
+    pathId: "path7",
+    activeLabel: "7. postMessage({ code, state })",
+    packet: `window.opener.postMessage({
+  type: "ENDLESS_LOGIN_CALLBACK",
+  code: "ac_9f82c47a10b3e5d7",
+  state: "st_81c7f4e9a0"
+}, "https://endlessvault.game");`,
+    speakerNote: "The login popup communicates back to Endless Vault using window.postMessage with strict origin checking. If popup blockers are active, the SDK automatically falls back to full-page redirect."
+  },
+  {
+    step: 8,
+    title: "Game SDK Exchanges Code & PKCE Verifier",
+    actor: "nodeGame",
+    desc: "SDK calls /token passing the authorization code and the original code_verifier secret.",
+    pathId: "path8",
+    activeLabel: "8. POST /token (code + verifier)",
+    packet: `POST /token HTTP/1.1
+Host: login.endlessdomains.io
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&code=ac_9f82c47a10b3e5d7
+&code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
+&client_id=endless-vault`,
+    speakerNote: "This is where PKCE protects the game: even if a malicious script or browser extension intercepted the code from step 7, it cannot exchange it without the code_verifier that never left the game's memory."
+  },
+  {
+    step: 9,
+    title: "Login Service Issues ES256 Signed JWT Tokens",
+    actor: "nodeLogin",
+    desc: "Returns ID Token (JWT with domain & wallet), Access Token, and rotating Refresh Token.",
+    pathId: "path9",
+    activeLabel: "9. Returns ID Token (JWT)",
+    packet: `HTTP/1.1 200 OK
+Content-Type: application/json
+{
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "id_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImxvZ2luLWtleS0yMDI2LTE... (JWT)",
+  "access_token": "at_7c1d9b3a...",
+  "refresh_token": "rt_4f2a8e1b..."
+}`,
+    speakerNote: "The ID Token contains the player's identity and is signed by our private key in AWS KMS. Access and ID tokens last 1 hour. Refresh tokens last 7 days and rotate on every single use."
+  },
+  {
+    step: 10,
+    title: "Game Verifies Token via JWKS & Activates Mech",
+    actor: "nodeServer",
+    desc: "Game server checks token signature against /.well-known/jwks.json. Player gets Gold Tier mech!",
+    pathId: "path10",
+    activeLabel: "10. Verify JWKS & Unlock Tier",
+    packet: `GET /.well-known/jwks.json HTTP/1.1
+Host: login.endlessdomains.io
+
+Response:
+{
+  "keys": [{
+    "kty": "EC",
+    "crv": "P-256",
+    "kid": "login-key-2026-1",
+    "x": "WKn-EgYuHwBc0ZdQ...",
+    "y": "v89wStC4i_CqL..."
+  }]
+}
+VERIFICATION RESULT: SIGNATURE VALID. PLAYER = akshat.og`,
+    speakerNote: "Any game server or backend can verify the player with standard open-source JWT libraries using our public JWKS endpoint. Endless Vault now officially upgrades the player from guest to verified Tier 3!"
+  }
+];
+
+// =========================================================================
+// FLOWCHART SVG WIRE POSITIONING LOGIC
+// =========================================================================
+function getNodeCenter(nodeId) {
+  const el = document.getElementById(nodeId);
+  const container = document.getElementById('whiteboard');
+  const bBox = el.getBoundingClientRect();
+  const cBox = container.getBoundingClientRect();
+  return {
+    x: bBox.left - cBox.left + bBox.width / 2,
+    y: bBox.top - cBox.top + bBox.height / 2,
+    left: bBox.left - cBox.left,
+    right: bBox.right - cBox.left,
+    top: bBox.top - cBox.top,
+    bottom: bBox.bottom - cBox.top,
+    w: bBox.width,
+    h: bBox.height
+  };
+}
+
+function updateConnectorPaths() {
+  const g = getNodeCenter('nodeGame');
+  const w = getNodeCenter('nodeWallet');
+  const l = getNodeCenter('nodeLogin');
+  const c = getNodeCenter('nodeChain');
+  const s = getNodeCenter('nodeServer');
+
+  // Edge-to-edge curves
+  // Path 1: Game Right -> Login Top/Left
+  const p1 = `M ${g.right} ${g.y + 10} C ${g.right + 50} ${g.y + 10}, ${l.left - 50} ${l.top + 20}, ${l.left} ${l.top + 20}`;
+  // Path 2: Login Bottom/Left -> Wallet Top/Right
+  const p2 = `M ${l.left + 20} ${l.bottom} C ${l.left - 30} ${l.bottom + 60}, ${w.right + 30} ${w.top - 40}, ${w.right} ${w.top + 20}`;
+  // Path 3: Login Left -> Wallet Top/Center
+  const p3 = `M ${l.left} ${l.y + 20} C ${l.left - 80} ${l.y + 20}, ${w.x + 30} ${w.top - 50}, ${w.x + 30} ${w.top}`;
+  // Path 4: Wallet Right -> Login Bottom/Center
+  const p4 = `M ${w.right} ${w.y + 10} C ${w.right + 80} ${w.y + 10}, ${l.x - 40} ${l.bottom + 40}, ${l.x - 20} ${l.bottom}`;
+  // Path 5: Login Right -> Chain Left
+  const p5 = `M ${l.right} ${l.top + 25} C ${l.right + 60} ${l.top + 25}, ${c.left - 60} ${c.y + 10}, ${c.left} ${c.y + 10}`;
+  // Path 6: Chain Bottom -> Login Top/Right
+  const p6 = `M ${c.x - 20} ${c.bottom} C ${c.x - 20} ${c.bottom + 50}, ${l.right + 40} ${l.top - 10}, ${l.right} ${l.top + 10}`;
+  // Path 7: Login Left -> Game Bottom
+  const p7 = `M ${l.left} ${l.y - 15} C ${l.left - 60} ${l.y - 15}, ${g.x + 40} ${g.bottom + 40}, ${g.x + 40} ${g.bottom}`;
+  // Path 8: Game Bottom/Right -> Login Left/Center
+  const p8 = `M ${g.right - 20} ${g.bottom} C ${g.right} ${g.bottom + 40}, ${l.left - 40} ${l.y}, ${l.left} ${l.y}`;
+  // Path 9: Login Left -> Game Right/Center
+  const p9 = `M ${l.left} ${l.y - 30} C ${l.left - 80} ${l.y - 30}, ${g.right + 40} ${g.y - 10}, ${g.right} ${g.y - 10}`;
+  // Path 10: Game Right -> Server Left
+  const p10 = `M ${g.right} ${g.y + 30} C ${g.right + 120} ${g.y + 180}, ${s.left - 80} ${s.top + 20}, ${s.left} ${s.top + 20}`;
+
+  document.getElementById('path1').setAttribute('d', p1);
+  document.getElementById('path2').setAttribute('d', p2);
+  document.getElementById('path3').setAttribute('d', p3);
+  document.getElementById('path4').setAttribute('d', p4);
+  document.getElementById('path5').setAttribute('d', p5);
+  document.getElementById('path6').setAttribute('d', p6);
+  document.getElementById('path7').setAttribute('d', p7);
+  document.getElementById('path8').setAttribute('d', p8);
+  document.getElementById('path9').setAttribute('d', p9);
+  document.getElementById('path10').setAttribute('d', p10);
+}
+
+// =========================================================================
+// PRESENTATION STATE CONTROLLER
+// =========================================================================
+let currentStepIndex = 0;
+let autoPlayTimer = null;
+
+function renderStep(index) {
+  currentStepIndex = Math.max(0, Math.min(STEPS.length - 1, index));
+  const cur = STEPS[currentStepIndex];
+
+  // Update header text in presenter bar
+  document.getElementById('stepCounterBadge').textContent = `STEP ${cur.step} OF ${STEPS.length}`;
+  document.getElementById('stepTitleText').textContent = cur.title;
+  document.getElementById('stepDescText').textContent = cur.desc;
+
+  // Highlight active node
+  document.querySelectorAll('.wb-node').forEach(n => n.classList.remove('active-actor'));
+  const activeNode = document.getElementById(cur.actor);
+  if (activeNode) activeNode.classList.add('active-actor');
+
+  // Highlight active path & mark previous as completed
+  for (let i = 1; i <= 10; i++) {
+    const p = document.getElementById(`path${i}`);
+    if (!p) continue;
+    p.classList.remove('active', 'completed');
+    if (i === cur.step) {
+      p.classList.add('active');
+    } else if (i < cur.step) {
+      p.classList.add('completed');
+    }
+  }
+
+  // Update packet inspector
+  document.getElementById('packetLabel').textContent = cur.activeLabel;
+  document.getElementById('packetPayloadView').textContent = cur.packet;
+
+  // Update speaker script tab
+  document.getElementById('dynamicSpeakerNote').innerHTML = `
+    <b style="color: var(--cyan); font-size: 13px;">Step ${cur.step}: ${cur.title}</b><br>
+    <p style="margin-top: 6px; font-size: 12.5px; line-height: 1.55; color: var(--text);">${cur.speakerNote}</p>
+  `;
+
+  // Update sidebar game state explanation
+  document.getElementById('simStateExplanation').innerHTML = `
+    <b>Step ${cur.step}:</b> ${cur.desc}
+  `;
+
+  // If we reached step 10, complete the game simulation
+  if (cur.step === 10) {
+    applyGameLoginVerified("akshat.og");
+  }
+}
+
+function applyGameLoginVerified(domainName) {
+  document.getElementById('simPlayerName').textContent = domainName;
+  const tag = document.getElementById('simPlayerTag');
+  tag.textContent = "VERIFIED";
+  tag.className = "game-who-status verified";
+
+  const mechAvatar = document.getElementById('simMechAvatar');
+  mechAvatar.textContent = "⚔️";
+  mechAvatar.classList.add('gold-tier');
+
+  document.getElementById('simMechTitle').textContent = "Warden · Gold Tier Halo [VERIFIED]";
+  document.getElementById('simMechTitle').style.color = "#FDC651";
+  document.getElementById('simMechPerk').textContent = `${domainName} is verified on Polygon · Gold bolts & victory halo unlocked`;
+  document.getElementById('simMechPerk').style.color = "#3CF2B0";
+
+  const btn = document.getElementById('btnSimSignIn');
+  btn.innerHTML = `✓ Signed in as ${domainName} (Click to switch)`;
+  btn.style.background = "linear-gradient(135deg, #10B981, #059669)";
+}
+
+function resetSimulation() {
+  document.getElementById('simPlayerName').textContent = "guest.og";
+  const tag = document.getElementById('simPlayerTag');
+  tag.textContent = "unverified";
+  tag.className = "game-who-status unverified";
+
+  const mechAvatar = document.getElementById('simMechAvatar');
+  mechAvatar.textContent = "🤖";
+  mechAvatar.classList.remove('gold-tier');
+
+  document.getElementById('simMechTitle').textContent = "Warden · Standard Armour";
+  document.getElementById('simMechTitle').style.color = "var(--text)";
+  document.getElementById('simMechPerk').textContent = "No linked domain · Type or login to upgrade";
+  document.getElementById('simMechPerk').style.color = "var(--text-muted)";
+
+  const btn = document.getElementById('btnSimSignIn');
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:20px;height:20px">
+      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+      <polyline points="10 17 15 12 10 7"/>
+      <line x1="15" y1="12" x2="3" y2="12"/>
+    </svg>
+    Sign in with your domain
+  `;
+  btn.style.background = "linear-gradient(135deg, #2639ED, #4F6BFF)";
+  
+  if (autoPlayTimer) {
+    clearInterval(autoPlayTimer);
+    autoPlayTimer = null;
+    document.getElementById('btnAutoPlay').textContent = "▶ Auto-Tour";
+  }
+
+  renderStep(0);
+}
+
+// =========================================================================
+// EVENT LISTENERS & INTERACTIVITY
+// =========================================================================
+document.getElementById('btnNextStep').onclick = () => renderStep(currentStepIndex + 1);
+document.getElementById('btnPrevStep').onclick = () => renderStep(currentStepIndex - 1);
+document.getElementById('btnReset').onclick = resetSimulation;
+
+document.getElementById('btnAutoPlay').onclick = function() {
+  if (autoPlayTimer) {
+    clearInterval(autoPlayTimer);
+    autoPlayTimer = null;
+    this.textContent = "▶ Auto-Tour";
+  } else {
+    this.textContent = "⏸ Pause Tour";
+    autoPlayTimer = setInterval(() => {
+      if (currentStepIndex >= STEPS.length - 1) {
+        clearInterval(autoPlayTimer);
+        autoPlayTimer = null;
+        document.getElementById('btnAutoPlay').textContent = "▶ Auto-Tour";
+      } else {
+        renderStep(currentStepIndex + 1);
+      }
+    }, 2500);
+  }
+};
+
+// Fast-forward button
+document.getElementById('btnSimFastForward').onclick = () => renderStep(STEPS.length - 1);
+
+// Theme Toggle
+document.getElementById('btnThemeToggle').onclick = () => {
+  const cur = document.body.getAttribute('data-theme');
+  const next = cur === 'light' ? 'dark' : 'light';
+  document.body.setAttribute('data-theme', next);
+};
+
+// Sidebar Tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.sidebar-content').forEach(c => c.style.display = 'none');
+    document.getElementById(target).style.display = 'block';
+  };
+});
+
+// Modal Logic
+const modal = document.getElementById('sdkModalOverlay');
+function openSDKModal() {
+  modal.classList.add('open');
+  showPopupScreen(1);
+}
+function closeSDKModal() {
+  modal.classList.remove('open');
+}
+document.getElementById('btnLaunchSDKModal').onclick = openSDKModal;
+document.getElementById('btnSimSignIn').onclick = openSDKModal;
+document.getElementById('btnCloseModal').onclick = closeSDKModal;
+
+function showPopupScreen(num) {
+  document.getElementById('popupScreen1').style.display = num === 1 ? 'block' : 'none';
+  document.getElementById('popupScreen2').style.display = num === 2 ? 'block' : 'none';
+  document.getElementById('popupScreen3').style.display = num === 3 ? 'block' : 'none';
+}
+
+document.getElementById('btnPopupConnectMM').onclick = () => {
+  renderStep(2); // advance to step 3 in flowchart
+  showPopupScreen(2);
+};
+
+document.getElementById('btnCancelSign').onclick = () => {
+  showPopupScreen(1);
+};
+
+document.getElementById('btnConfirmSign').onclick = () => {
+  renderStep(4); // advance past on-chain check
+  showPopupScreen(3);
+};
+
+document.getElementById('btnConfirmDomain').onclick = () => {
+  const chosen = document.querySelector('input[name="domainChoice"]:checked').value;
+  closeSDKModal();
+  renderStep(9); // complete step 10
+  applyGameLoginVerified(chosen);
+};
+
+// Node clicks jump directly to corresponding step
+document.getElementById('nodeGame').onclick = () => renderStep(0);
+document.getElementById('nodeWallet').onclick = () => renderStep(3);
+document.getElementById('nodeLogin').onclick = () => renderStep(2);
+document.getElementById('nodeChain').onclick = () => renderStep(4);
+document.getElementById('nodeServer').onclick = () => renderStep(9);
+
+// Window resize listener
+window.addEventListener('resize', updateConnectorPaths);
+
+// Initialize
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    updateConnectorPaths();
+    renderStep(0);
+  }, 120);
+});
+</script>
+</body>
+</html>

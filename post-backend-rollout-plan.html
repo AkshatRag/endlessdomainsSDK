@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Endless Domains — Post-Backend Rollout, SDK & Pilot Game Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #090B10;
+    --surface: #121622;
+    --surface-elevated: #181E2E;
+    --surface-hover: #1F273B;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-bright: rgba(255, 255, 255, 0.22);
+    --text: #F1F4FA;
+    --text-muted: #8E9AB0;
+    --accent: #4F6BFF;
+    --accent-soft: rgba(79, 107, 255, 0.14);
+    --cyan: #22D3EE;
+    --cyan-soft: rgba(34, 211, 238, 0.14);
+    --green: #10B981;
+    --green-soft: rgba(16, 185, 129, 0.14);
+    --amber: #F59E0B;
+    --amber-soft: rgba(245, 158, 11, 0.14);
+    --purple: #A855F7;
+    --purple-soft: rgba(168, 85, 247, 0.14);
+    --rose: #F43F5E;
+    --rose-soft: rgba(244, 63, 94, 0.14);
+    --font-ui: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  [data-theme="light"] {
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --surface-elevated: #F1F5F9;
+    --surface-hover: #E2E8F0;
+    --border: rgba(0, 0, 0, 0.09);
+    --border-bright: rgba(0, 0, 0, 0.2);
+    --text: #0F172A;
+    --text-muted: #64748B;
+    --accent: #2563EB;
+    --accent-soft: rgba(37, 99, 235, 0.1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    line-height: 1.6;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .layout-wrap {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 40px 24px 100px;
+  }
+  header.hero {
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #10B981, #22D3EE);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: clamp(26px, 4vw, 38px);
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+  p.lead {
+    font-size: 16.5px;
+    color: var(--text-muted);
+    max-width: 860px;
+  }
+  .nav-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 36px;
+  }
+  .nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    background: var(--surface-elevated);
+    color: var(--text);
+    transition: all 0.2s ease;
+  }
+  .nav-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-bright);
+    transform: translateY(-1px);
+  }
+  .nav-btn.primary {
+    background: linear-gradient(135deg, #2639ED, #3B82F6);
+    border-color: transparent;
+    color: #fff;
+  }
+  section { margin-bottom: 48px; }
+  h2 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+  h3 { font-size: 17px; font-weight: 700; margin: 20px 0 10px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 16px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 768px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  .table-wrap {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 20px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { padding: 11px 15px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  th { background: var(--surface-elevated); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 5px;
+    color: var(--cyan);
+  }
+  pre {
+    background: #0B0D14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.5;
+    color: #E2E8F0;
+    overflow-x: auto;
+    margin: 10px 0 16px;
+  }
+  .callout {
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--green);
+    background: var(--green-soft);
+  }
+  .callout.cyan { border-color: var(--cyan); background: var(--cyan-soft); }
+  .callout.amber { border-color: var(--amber); background: var(--amber-soft); }
+  .milestone-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .milestone-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .gate-box {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-top: 14px;
+    font-size: 13px;
+  }
+  .gate-box b { color: var(--green); }
+  .theme-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<div class="layout-wrap">
+  <header class="hero">
+    <div class="badge">Execution Roadmap</div>
+    <h1>After the Backend is Completed: What's Next?</h1>
+    <p class="lead">
+      A structured, milestone-driven execution plan for turning the completed NestJS <code>login-provider</code> backend into a live, production-ready product across the hosted UI, client SDK packages, pilot game integrations, and partner studio launch.
+    </p>
+  </header>
+
+  <!-- Navigation bar to related workspace files -->
+  <div class="nav-strip">
+    <a href="login-sdk-whiteboard-demo.html" class="nav-btn primary" target="_blank">
+      🖥️ Launch Live Whiteboard Demo
+    </a>
+    <a href="endless-login-guide.html" class="nav-btn" target="_blank">
+      📖 View Full Executive Architecture Guide
+    </a>
+    <a href="backend-sdk-implementation-plan.html" class="nav-btn" target="_blank">
+      ⚙️ View Backend NestJS Plan
+    </a>
+    <a href="endless-vault_14 1.html" class="nav-btn" target="_blank">
+      🎮 View Endless Vault Game
+    </a>
+  </div>
+
+  <!-- Big Picture Overview -->
+  <section>
+    <h2>The 4 Post-Backend Milestones at a Glance</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Milestone</th>
+            <th>Deliverable</th>
+            <th>Primary Owner</th>
+            <th>Duration</th>
+            <th>Exit Gate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Milestone 1</b></td>
+            <td><b>Hosted Login Web App</b> (<code>login.endlessdomains.io</code>)</td>
+            <td>1 Frontend Developer</td>
+            <td>5 - 7 Days</td>
+            <td>Real wallet connects, signs SIWE, picks <code>.og</code>, popup closes.</td>
+          </tr>
+          <tr>
+            <td><b>Milestone 2</b></td>
+            <td><b>NPM Packages & CDN Script</b> (<code>@endlessdomains/login</code>)</td>
+            <td>1 SDK / Frontend Developer</td>
+            <td>4 - 5 Days</td>
+            <td>10-line SDK imported into a sample page verifies identity.</td>
+          </tr>
+          <tr>
+            <td><b>Milestone 3</b></td>
+            <td><b>Live Pilot Game Integration</b> (<i>Endless Vault</i>)</td>
+            <td>Frontend / Game Dev</td>
+            <td>3 - 4 Days</td>
+            <td>Spoofable text box replaced; verified <code>.og</code> unlocks Gold Mech!</td>
+          </tr>
+          <tr>
+            <td><b>Milestone 4</b></td>
+            <td><b>Developer Docs, Audit & Partner Launch</b></td>
+            <td>Fullstack + DevOps + Product</td>
+            <td>4 - 5 Days</td>
+            <td>Public docs live, load test passed, first 3-5 game studios onboarded.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- MILESTONE 1 -->
+  <section>
+    <h2>Milestone 1: The Hosted Login Web App (login.endlessdomains.io)</h2>
+    <p>
+      The backend exposes the OIDC APIs, but players need a visual, branded interface. This is a dedicated Next.js web application deployed to its own subdomain (<code>login.endlessdomains.io</code>).
+    </p>
+
+    <div class="card" style="border-left: 4px solid var(--accent);">
+      <div class="milestone-header">
+        <h3 style="margin:0;">The 4 Player Screens to Build</h3>
+        <span class="milestone-badge" style="background:var(--accent-soft); color:var(--accent);">WEEK 1 · FRONTEND</span>
+      </div>
+
+      <div class="grid-2">
+        <div style="background:var(--surface-elevated); padding:14px; border-radius:12px;">
+          <b style="color:var(--text); font-size:13.5px; display:block; margin-bottom:6px;">Screen 1: Game Info & Wallet Connect</b>
+          <p style="font-size:13px; color:var(--text-muted); margin:0;">
+            Displays the calling game's name and logo (e.g. <i>"Endless Vault wants you to sign in"</i>). Reuses <b>Reown AppKit</b> to connect MetaMask, Coinbase Wallet, or scan a phone QR code via WalletConnect.
+          </p>
+        </div>
+        <div style="background:var(--surface-elevated); padding:14px; border-radius:12px;">
+          <b style="color:var(--text); font-size:13.5px; display:block; margin-bottom:6px;">Screen 2: SIWE Signature Prompt</b>
+          <p style="font-size:13px; color:var(--text-muted); margin:0;">
+            Prompts the wallet to sign the standardized EIP-4361 text message on Polygon (Chain ID 137). Completely free, 0 gas fees.
+          </p>
+        </div>
+        <div style="background:var(--surface-elevated); padding:14px; border-radius:12px;">
+          <b style="color:var(--text); font-size:13.5px; display:block; margin-bottom:6px;">Screen 3: .og Domain Selector</b>
+          <p style="font-size:13px; color:var(--text-muted); margin:0;">
+            Lists the wallet's verified domains with the player's <b>PRIMARY</b> reverse-record domain first (e.g., <code>akshat.og</code>). If the user has no domain, presents a <i>Wallet-Only</i> option and a button to buy an .og name.
+          </p>
+        </div>
+        <div style="background:var(--surface-elevated); padding:14px; border-radius:12px;">
+          <b style="color:var(--text); font-size:13.5px; display:block; margin-bottom:6px;">Screen 4: Consent & postMessage</b>
+          <p style="font-size:13px; color:var(--text-muted); margin:0;">
+            Shows the approved scopes (domain, address, avatar). Clicking <b>Approve</b> issues the authorization code, sends it to the game via <code>window.opener.postMessage</code>, and closes the popup.
+          </p>
+        </div>
+      </div>
+
+      <div class="gate-box">
+        <b>🏁 Milestone 1 Exit Gate:</b> An end-to-end manual test where a developer clicks "Sign In", connects MetaMask on stage, signs the message, picks <code>akshat.og</code>, and sees the popup close with the code delivered.
+      </div>
+    </div>
+  </section>
+
+  <!-- MILESTONE 2 -->
+  <section>
+    <h2>Milestone 2: The Client SDK Packages & CDN Distribution</h2>
+    <p>
+      Game developers will not write raw OIDC HTTP queries. We publish a clean, lightweight monorepo repository (<code>endlessdomains-login-sdk</code>) with two npm packages and a CDN script build.
+    </p>
+
+    <div class="card" style="border-left: 4px solid var(--cyan);">
+      <div class="milestone-header">
+        <h3 style="margin:0;">The Two NPM Packages</h3>
+        <span class="milestone-badge" style="background:var(--cyan-soft); color:var(--cyan);">WEEK 2 · SDK & TOOLS</span>
+      </div>
+
+      <div class="grid-2">
+        <div style="background:var(--surface-elevated); padding:14px; border-radius:12px;">
+          <b style="color:var(--cyan); font-size:13.5px; display:block; margin-bottom:6px;">1. @endlessdomains/login (&lt;15KB gzip)</b>
+          <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">
+            The browser SDK for game frontends:
+          </p>
+          <ul style="margin-left:16px; font-size:12.5px; color:var(--text-muted); line-height:1.5;">
+            <li>Generates PKCE <code>code_verifier</code> and <code>code_challenge</code>.</li>
+            <li>Manages popup window and listens for <code>postMessage</code>.</li>
+            <li>Detects popup blockers and falls back to full-page redirect.</li>
+            <li>Automatically schedules token refresh before 1-hour expiry.</li>
+            <li>Includes ready-made branded button: <code>login.renderButton()</code>.</li>
+          </ul>
+        </div>
+
+        <div style="background:var(--surface-elevated); padding:14px; border-radius:12px;">
+          <b style="color:var(--green); font-size:13.5px; display:block; margin-bottom:6px;">2. @endlessdomains/login-verify</b>
+          <p style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">
+            The backend verifier for game servers:
+          </p>
+          <ul style="margin-left:16px; font-size:12.5px; color:var(--text-muted); line-height:1.5;">
+            <li>Fetches and caches <code>/.well-known/jwks.json</code> public keys.</li>
+            <li>Verifies ES256 signatures on player ID tokens offline in &lt;1ms.</li>
+            <li>Validates audience, issuer, expiration, and pairwise <code>sub</code>.</li>
+            <li>Compatible with Node.js, Express, Cloudflare Workers, and Next.js.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4 style="margin: 14px 0 6px; font-size: 14px;">10-Line Integration Experience for Game Studios:</h4>
+      <pre><code>import { EndlessLogin } from '@endlessdomains/login';
+
+const login = new EndlessLogin({
+  clientId: 'space-runner',
+  redirectUri: 'https://spacerunner.game/callback',
+  mode: 'popup' // or 'redirect'
+});
+
+// One line to authenticate
+const player = await login.signIn();
+console.log(`Verified Player: ${player.name} (${player.walletAddress})`);
+// player.name = "akshat.og"
+// player.domain_status = "owned"</code></pre>
+
+      <div class="gate-box">
+        <b>🏁 Milestone 2 Exit Gate:</b> Both packages published to a private or staging npm registry; bundle size verified under 15KB gzip; sample HTML test page signs in using the CDN script.
+      </div>
+    </div>
+  </section>
+
+  <!-- MILESTONE 3 -->
+  <section>
+    <h2>Milestone 3: Live Pilot Integration in Endless Vault</h2>
+    <p>
+      The best proof of an SDK is integrating it into our own production game: <a href="endless-vault_14 1.html" style="color:var(--cyan);">endless-vault_14 1.html</a>. This proves the system end-to-end before asking external partners to adopt it.
+    </p>
+
+    <div class="card" style="border-left: 4px solid var(--amber);">
+      <div class="milestone-header">
+        <h3 style="margin:0;">The Endless Vault Transformation</h3>
+        <span class="milestone-badge" style="background:var(--amber-soft); color:var(--amber);">WEEK 3 · GAME PILOT</span>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <b style="color:var(--text); font-size:13.5px; display:block; margin-bottom:6px;">Game Code Updates in endless-vault_14 1.html:</b>
+          <ul style="margin-left:18px; font-size:13px; color:var(--text-muted); line-height:1.6;">
+            <li>Delete the unverified text box <code>#idIn</code> and unverified status label <code>#whoTag</code>.</li>
+            <li>Embed the official <b>"Sign in with your domain"</b> button in the top HUD.</li>
+            <li>On sign-in, bind the player's mech to <code>claims.name</code> (e.g. <code>akshat.og</code>).</li>
+            <li>Trigger the <b>Tier 3 Gold Halo Armor</b> transformation, engraved plating, and golden lightning bolts.</li>
+          </ul>
+        </div>
+        <div>
+          <b style="color:var(--text); font-size:13.5px; display:block; margin-bottom:6px;">Multiplayer & Leaderboard Integrity:</b>
+          <ul style="margin-left:18px; font-size:13px; color:var(--text-muted); line-height:1.6;">
+            <li>When submitting high scores, the game attaches the player's signed ID Token.</li>
+            <li>The leaderboard backend uses <code>@endlessdomains/login-verify</code> to confirm that the submitter genuinely owns <code>akshat.og</code>.</li>
+            <li>Cheated or spoofed high scores become mathematically impossible.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="gate-box">
+        <b>🏁 Milestone 3 Exit Gate:</b> 5 internal team members play <i>Endless Vault</i> on both desktop and mobile; median login time is under 30 seconds; the leaderboard accurately reflects verified <code>.og</code> owners.
+      </div>
+    </div>
+  </section>
+
+  <!-- MILESTONE 4 -->
+  <section>
+    <h2>Milestone 4: Developer Documentation, Security Hardening & Partner Launch</h2>
+    <p>
+      Once proven in our own game, we launch the SDK to external web3 game developers, creating network effects and driving demand for Endless Domains.
+    </p>
+
+    <div class="card" style="border-left: 4px solid var(--purple);">
+      <div class="milestone-header">
+        <h3 style="margin:0;">Launch & Expansion Tasks</h3>
+        <span class="milestone-badge" style="background:var(--purple-soft); color:var(--purple);">WEEK 4 · PUBLIC LAUNCH</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Task</th>
+              <th>Description</th>
+              <th>Outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Developer Portal & Docs</b></td>
+              <td>Publish documentation at <code>docs.endlessdomains.io/login</code> with quickstart guides, Unity WebGL bridge examples, and claim references.</td>
+              <td>External game devs can self-serve in under 1 hour.</td>
+            </tr>
+            <tr>
+              <td><b>Load Testing & Hardening</b></td>
+              <td>Simulate 50 concurrent sign-ins per second for 10 minutes on staging. Test Alchemy RPC rate limits and Redis caching.</td>
+              <td>Guarantees backend stability during viral gaming traffic.</td>
+            </tr>
+            <tr>
+              <td><b>Security Audit Pass</b></td>
+              <td>Review OIDC conformance, SIWE parsing edge cases, CORS whitelisting, and AWS KMS key rotation runbooks.</td>
+              <td>Zero high or medium severity vulnerabilities open.</td>
+            </tr>
+            <tr>
+              <td><b>First 3-5 Partner Studios</b></td>
+              <td>Onboard 3 to 5 pilot partner games (creating their <code>client_id</code> and redirect URIs in our admin table).</td>
+              <td>Endless Domains becomes the cross-game identity standard!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="gate-box">
+        <b>🏁 Milestone 4 Exit Gate:</b> Production deploy completed; documentation live; first partner game integrates and goes live with the SDK.
+      </div>
+    </div>
+  </section>
+
+  <!-- Executive Script -->
+  <section>
+    <h2>What to Tell Mohit Sir in the Meeting</h2>
+    <div class="card" style="border: 1.5px solid var(--accent); background: var(--surface-elevated);">
+      <p style="font-size: 15px; line-height: 1.7; color: var(--text); font-style: italic; margin-bottom: 0;">
+        "Mohit sir, the backend is only the foundation. Once it is finished, our 4-week execution plan brings it to market:
+        <br><br>
+        1. <b>Week 1:</b> We launch the branded hosted login page at <code>login.endlessdomains.io</code> with our wallet connect UI.
+        <br>
+        2. <b>Week 2:</b> We package our 10-line browser SDK (<code>@endlessdomains/login</code>) and server verifier.
+        <br>
+        3. <b>Week 3:</b> We prove it live in our own game, <b>Endless Vault</b>. Verified <code>.og</code> domain owners get exclusive gold mechs and verified spots on the leaderboard.
+        <br>
+        4. <b>Week 4:</b> We release the developer portal and onboard our first 5 partner game studios. 
+        <br><br>
+        Every game that installs our button promotes the Endless Domains brand, gives our domain owners immense utility, and drives unverified gamers directly into our marketplace to buy their own <code>.og</code> names."
+      </p>
+    </div>
+  </section>
+</div>
+
+<button class="theme-toggle" id="themeToggle" title="Toggle Theme">🌓</button>
+
+<script>
+  const btn = document.getElementById('themeToggle');
+  btn.onclick = () => {
+    const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+  };
+</script>
+
+</body>
+</html>
